@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #28304a transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #28304a;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Monaco line highlight for the currently selected function/class/component. */
+.atlas-highlighted-range {
+  background-color: rgba(91, 124, 250, 0.12);
+}
+.atlas-highlighted-gutter {
+  border-left: 2px solid #5b7cfa;
+}
+
+/* React Flow theme overrides to match the app's dark palette. */
+.react-flow {
+  background-color: transparent;
+}
+.react-flow__attribution {
+  display: none;
+}
