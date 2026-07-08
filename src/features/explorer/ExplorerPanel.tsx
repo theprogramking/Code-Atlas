@@ -1,5 +1,6 @@
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { ChevronRight, ChevronDown, File, Folder, FolderOpen, SearchX, GitHub } from 'lucide-react';
+import { ChevronRight, ChevronDown, File, Folder, FolderOpen, SearchX } from 'lucide-react';
+import { FaGithub as Github } from 'react-icons/fa';
 import clsx from 'clsx';
 import { Panel } from '../../components/Panel';
 import { useAppStore } from '../../store/useAppStore';
@@ -157,7 +158,7 @@ export function ExplorerPanel() {
             onClick={() => openGithubImportModal()}
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/5"
           >
-            <GitHub size={14} />
+            <Github size={14} />
             Import from GitHub
           </button>
         </div>

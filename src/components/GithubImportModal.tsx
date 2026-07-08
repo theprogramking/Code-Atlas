@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { GitHub, Loader2, Sparkles, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Loader2, Sparkles, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { FaGithub as Github } from 'react-icons/fa';
 import clsx from 'clsx';
 import { IconButton } from './IconButton';
 import { parseGitHubRepositoryUrl } from '../services/githubImportService';

@@ -1,4 +1,5 @@
-import { FolderOpen, Search, Map as MapIcon, History, Sparkles, GitHub } from 'lucide-react';
+import { FolderOpen, Search, Map as MapIcon, History, Sparkles } from 'lucide-react';
+import { FaGithub as Github } from 'react-icons/fa';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { isFileSystemAccessSupported } from '../services/fileSystemService';
@@ -66,7 +67,7 @@ export function Toolbar() {
           onClick={() => openGithubImportModal()}
           className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/5"
         >
-          <GitHub size={14} />
+          <Github size={14} />
           Import from GitHub
         </button>
         {recentProjects.length > 0 && (
