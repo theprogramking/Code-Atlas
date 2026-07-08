@@ -26,6 +26,10 @@ import {
 import { parseProjectFiles } from '../features/parser/projectParser';
 import { buildArchitectureGraph } from '../features/parser/graphBuilder';
 import { computeAutoLayout } from '../features/graph/layout';
+import {
+  importGitHubRepository,
+  type GitHubImportProgress,
+} from '../services/githubImportService';
 import type { RecentProjectRecord } from '../types/fileSystem';
 
 export type LoadingPhase = 'idle' | 'scanning' | 'parsing' | 'building-graph' | 'ready' | 'error';
@@ -41,6 +45,10 @@ interface AppState {
   loadingMessage: string;
   loadingProgress: { current: number; total: number } | null;
   errorMessage: string | null;
+  githubImportOpen: boolean;
+  githubImporting: boolean;
+  githubImportProgress: GitHubImportProgress[];
+  githubImportError: string | null;
 
   selectedNodeId: string | null;
   selectedFilePath: string | null;
@@ -52,6 +60,9 @@ interface AppState {
 
   initialize: () => Promise<void>;
   openProjectPicker: () => Promise<void>;
+  openGithubImportModal: () => void;
+  closeGithubImportModal: () => void;
+  importFromGitHub: (url: string) => Promise<void>;
   reopenRecentProject: (record: RecentProjectRecord) => Promise<void>;
   selectNode: (nodeId: string | null) => void;
   selectFileByPath: (path: string) => void;
@@ -75,6 +86,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadingMessage: '',
   loadingProgress: null,
   errorMessage: null,
+  githubImportOpen: false,
+  githubImporting: false,
+  githubImportProgress: [],
+  githubImportError: null,
 
   selectedNodeId: null,
   selectedFilePath: null,
@@ -102,6 +117,118 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({
         loadingPhase: 'error',
         errorMessage: err instanceof Error ? err.message : 'Failed to open project.',
+      });
+    }
+  },
+
+  openGithubImportModal: () => {
+    set({ githubImportOpen: true, githubImportError: null });
+  },
+
+  closeGithubImportModal: () => {
+    set({ githubImportOpen: false });
+  },
+
+  importFromGitHub: async (url) => {
+    set({ githubImportOpen: true, githubImporting: true, githubImportError: null, githubImportProgress: [] });
+    try {
+      const progressSteps: GitHubImportProgress[] = [
+        { step: 'connect', message: 'Connecting to GitHub' },
+        { step: 'download', message: 'Downloading repository' },
+        { step: 'extract', message: 'Extracting files' },
+        { step: 'index', message: 'Indexing project' },
+        { step: 'graph', message: 'Building architecture graph' },
+      ];
+      set({ githubImportProgress: progressSteps.slice(0, 1) });
+      const payload = await importGitHubRepository(url, (progress) => {
+        set((state) => ({
+          githubImportProgress: state.githubImportProgress.some((item) => item.step === progress.step)
+            ? state.githubImportProgress.map((item) => (item.step === progress.step ? progress : item))
+            : [...state.githubImportProgress, progress],
+        }));
+      });
+
+      const projectId = `github:${payload.source.owner}/${payload.source.repo}`;
+      const tree = payload.tree;
+      const sourceFiles = flattenSourceFiles(tree);
+
+      set({
+        loadingPhase: 'parsing',
+        loadingMessage: 'Parsing imported repository...',
+        loadingProgress: { current: 0, total: sourceFiles.length },
+        errorMessage: null,
+        project: null,
+        graph: null,
+        selectedNodeId: null,
+        selectedFilePath: null,
+      });
+
+      const parsedList = await parseProjectFiles(projectId, sourceFiles, {
+        onProgress: (p) =>
+          set({
+            loadingMessage: `Parsing: ${p.currentPath}`,
+            loadingProgress: { current: p.parsed, total: p.total },
+          }),
+      });
+      const parsedFiles = new Map(parsedList.map((pf) => [pf.path, pf] as const));
+
+      const fullStats: ProjectStats = {
+        ...payload.stats,
+        componentCount: parsedList.reduce(
+          (acc, pf) => acc + pf.functions.filter((f) => f.isComponent).length + pf.classes.filter((c) => c.isComponent).length,
+          0,
+        ),
+        functionCount: parsedList.reduce((acc, pf) => acc + pf.functions.length, 0),
+        classCount: parsedList.reduce((acc, pf) => acc + pf.classes.length, 0),
+        totalLines: parsedList.reduce((acc, pf) => acc + pf.lineCount, 0),
+      };
+
+      set({ loadingPhase: 'building-graph', loadingMessage: 'Building architecture graph...' });
+      const graph = buildArchitectureGraph(parsedList);
+      const cachedLayout = await getLayoutCache(projectId);
+      const positions = cachedLayout?.positions ?? computeAutoLayout(graph);
+      if (!cachedLayout) {
+        await putLayoutCache({ projectId, positions, updatedAt: Date.now() });
+      }
+
+      const project: OpenProject = {
+        name: payload.projectName,
+        rootHandle: payload.rootHandle,
+        tree,
+        stats: fullStats,
+        source: payload.source,
+      };
+      const recentProjectRecord: RecentProjectRecord = {
+        id: projectId,
+        name: payload.projectName,
+        lastOpened: Date.now(),
+        handle: payload.rootHandle as unknown as FileSystemDirectoryHandle,
+        source: payload.source,
+      };
+      await putRecentProject(recentProjectRecord);
+      const recents = await listRecentProjects();
+
+      set({
+        project,
+        projectId,
+        parsedFiles,
+        graph,
+        layoutPositions: positions,
+        loadingPhase: 'ready',
+        loadingMessage: '',
+        loadingProgress: null,
+        recentProjects: recents,
+        githubImportOpen: false,
+        githubImporting: false,
+        githubImportError: null,
+        githubImportProgress: [...progressSteps, { step: 'graph', message: 'Ready' }],
+      });
+    } catch (err) {
+      set({
+        loadingPhase: 'error',
+        errorMessage: err instanceof Error ? err.message : 'Failed to import repository.',
+        githubImporting: false,
+        githubImportError: err instanceof Error ? err.message : 'Failed to import repository.',
       });
     }
   },

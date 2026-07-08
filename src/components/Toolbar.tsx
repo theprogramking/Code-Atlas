@@ -1,4 +1,4 @@
-import { FolderOpen, Search, Map as MapIcon, History, Sparkles } from 'lucide-react';
+import { FolderOpen, Search, Map as MapIcon, History, Sparkles, GitHub } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { isFileSystemAccessSupported } from '../services/fileSystemService';
@@ -8,6 +8,7 @@ export function Toolbar() {
   const project = useAppStore((s) => s.project);
   const stats = project?.stats;
   const openProjectPicker = useAppStore((s) => s.openProjectPicker);
+  const openGithubImportModal = useAppStore((s) => s.openGithubImportModal);
   const recentProjects = useAppStore((s) => s.recentProjects);
   const reopenRecentProject = useAppStore((s) => s.reopenRecentProject);
   const searchQuery = useAppStore((s) => s.searchQuery);
@@ -61,6 +62,13 @@ export function Toolbar() {
           <FolderOpen size={14} />
           Open Project
         </button>
+        <button
+          onClick={() => openGithubImportModal()}
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/5"
+        >
+          <GitHub size={14} />
+          Import from GitHub
+        </button>
         {recentProjects.length > 0 && (
           <div className="relative">
             <IconButton
@@ -80,7 +88,12 @@ export function Toolbar() {
                     }}
                     className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-slate-300 transition hover:bg-white/5"
                   >
-                    <span className="truncate">{r.name}</span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate">{r.name}</span>
+                      {r.source?.kind === 'github' ? (
+                        <span className="mt-0.5 truncate text-[10px] text-slate-500">{r.source.owner}/{r.source.repo}</span>
+                      ) : null}
+                    </span>
                     <span className="shrink-0 text-[10px] text-slate-500">
                       {new Date(r.lastOpened).toLocaleDateString()}
                     </span>

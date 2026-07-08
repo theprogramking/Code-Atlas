@@ -1,5 +1,5 @@
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { ChevronRight, ChevronDown, File, Folder, FolderOpen, SearchX } from 'lucide-react';
+import { ChevronRight, ChevronDown, File, Folder, FolderOpen, SearchX, GitHub } from 'lucide-react';
 import clsx from 'clsx';
 import { Panel } from '../../components/Panel';
 import { useAppStore } from '../../store/useAppStore';
@@ -106,6 +106,7 @@ const TreeRow = memo(function TreeRow({ node, depth, expanded, toggle, query }: 
 export function ExplorerPanel() {
   const project = useAppStore((s) => s.project);
   const searchQuery = useAppStore((s) => s.searchQuery);
+  const openGithubImportModal = useAppStore((s) => s.openGithubImportModal);
   const deferredQuery = useDeferredValue(searchQuery);
   const selectedFilePath = useAppStore((s) => s.selectedFilePath);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -147,9 +148,18 @@ export function ExplorerPanel() {
   return (
     <Panel title="Explorer">
       {!project ? (
-        <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
           <Folder size={24} className="text-slate-600" />
-          <p className="text-sm text-slate-400">Open a project folder to inspect the file tree.</p>
+          <div>
+            <p className="text-sm text-slate-400">Open a project folder or import a public repository to inspect the file tree.</p>
+          </div>
+          <button
+            onClick={() => openGithubImportModal()}
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/5"
+          >
+            <GitHub size={14} />
+            Import from GitHub
+          </button>
         </div>
       ) : (
         <div className="flex h-full flex-col">

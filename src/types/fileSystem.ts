@@ -66,6 +66,14 @@ export interface ProjectStats {
   totalLines: number;
 }
 
+export interface ProjectSource {
+  kind: 'local' | 'github';
+  githubUrl?: string;
+  owner?: string;
+  repo?: string;
+  defaultBranch?: string;
+}
+
 export interface OpenProject {
   /** Human readable name (root directory name). */
   name: string;
@@ -73,6 +81,7 @@ export interface OpenProject {
   rootHandle: FileSystemDirectoryHandle;
   tree: FileTreeDirectory;
   stats: ProjectStats;
+  source?: ProjectSource;
 }
 
 /** Record persisted in IndexedDB so a project can be reopened with permission re-grant. */
@@ -82,4 +91,5 @@ export interface RecentProjectRecord {
   lastOpened: number;
   /** The FileSystemDirectoryHandle itself - IndexedDB can store handles directly (structured clone). */
   handle: FileSystemDirectoryHandle;
+  source?: ProjectSource;
 }
