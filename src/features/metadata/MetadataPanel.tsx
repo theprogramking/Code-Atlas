@@ -76,9 +76,11 @@ export function MetadataPanel() {
   if (!node) {
     return (
       <Panel title="Metadata">
-        <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-          <Info size={22} className="text-slate-600" />
-          <p className="text-xs text-slate-500">Select a node in the graph or explorer to see its details.</p>
+        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+            <Info size={22} className="text-slate-600" />
+          </div>
+          <p className="text-sm text-slate-400">Select a graph node or explorer entry to inspect its metadata.</p>
         </div>
       </Panel>
     );

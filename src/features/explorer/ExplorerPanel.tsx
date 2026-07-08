@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, ChevronDown, File, Folder, FolderOpen } from 'lucide-react';
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { ChevronRight, ChevronDown, File, Folder, FolderOpen, SearchX } from 'lucide-react';
 import clsx from 'clsx';
 import { Panel } from '../../components/Panel';
 import { useAppStore } from '../../store/useAppStore';
@@ -47,7 +47,7 @@ interface TreeRowProps {
   query: string;
 }
 
-function TreeRow({ node, depth, expanded, toggle, query }: TreeRowProps) {
+const TreeRow = memo(function TreeRow({ node, depth, expanded, toggle, query }: TreeRowProps) {
   const selectedFilePath = useAppStore((s) => s.selectedFilePath);
   const selectFileByPath = useAppStore((s) => s.selectFileByPath);
 
@@ -61,9 +61,9 @@ function TreeRow({ node, depth, expanded, toggle, query }: TreeRowProps) {
         onClick={() => selectFileByPath(node.path)}
         style={{ paddingLeft: 10 + depth * 14 }}
         className={clsx(
-          'flex w-full items-center gap-1.5 py-1 pr-2 text-left text-[12.5px] transition',
-          isSelected ? 'bg-accent-600/15 text-accent-200' : 'text-slate-300 hover:bg-white/5',
-          !node.isSource && 'opacity-40',
+          'flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12.5px] transition',
+          isSelected ? 'bg-accent-600/15 text-accent-100 shadow-[inset_0_0_0_1px_rgba(91,124,250,0.14)]' : 'text-slate-300 hover:bg-white/5 hover:text-white',
+          !node.isSource && 'opacity-50',
         )}
         title={node.path}
       >
@@ -79,14 +79,14 @@ function TreeRow({ node, depth, expanded, toggle, query }: TreeRowProps) {
       <button
         onClick={() => toggle(node.path)}
         style={{ paddingLeft: 4 + depth * 14 }}
-        className="flex w-full items-center gap-1 py-1 pr-2 text-left text-[12.5px] font-medium text-slate-400 hover:bg-white/5"
+        className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12.5px] font-medium text-slate-400 transition hover:bg-white/5 hover:text-slate-100"
       >
         {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-        {isExpanded ? <FolderOpen size={13} className="text-accent-400/70" /> : <Folder size={13} className="text-slate-500" />}
+        {isExpanded ? <FolderOpen size={13} className="text-accent-400/80" /> : <Folder size={13} className="text-slate-500" />}
         <span className="truncate">{node.name || '/'}</span>
       </button>
       {isExpanded && (
-        <div>
+        <div className="mt-0.5">
           {node.children.map((child) => (
             <TreeRow
               key={child.id}
@@ -101,11 +101,12 @@ function TreeRow({ node, depth, expanded, toggle, query }: TreeRowProps) {
       )}
     </div>
   );
-}
+});
 
 export function ExplorerPanel() {
   const project = useAppStore((s) => s.project);
   const searchQuery = useAppStore((s) => s.searchQuery);
+  const deferredQuery = useDeferredValue(searchQuery);
   const selectedFilePath = useAppStore((s) => s.selectedFilePath);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -126,14 +127,14 @@ export function ExplorerPanel() {
     }
   }, [selectedFilePath, project]);
 
-  const toggle = (path: string) => {
+  const toggle = useCallback((path: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(path)) next.delete(path);
       else next.add(path);
       return next;
     });
-  };
+  }, []);
 
   const stats = project?.stats;
   const statLine = useMemo(() => {
@@ -141,26 +142,29 @@ export function ExplorerPanel() {
     return `${stats.fileCount} files · ${stats.folderCount} folders · ${stats.totalLines.toLocaleString()} lines`;
   }, [stats]);
 
+  const hasVisibleNodes = Boolean(project && (deferredQuery ? project.tree.children.some((child) => matchesQuery(child, deferredQuery)) : true));
+
   return (
     <Panel title="Explorer">
       {!project ? (
         <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-          <Folder size={22} className="text-slate-600" />
-          <p className="text-xs text-slate-500">Open a project folder to get started.</p>
+          <Folder size={24} className="text-slate-600" />
+          <p className="text-sm text-slate-400">Open a project folder to inspect the file tree.</p>
         </div>
       ) : (
         <div className="flex h-full flex-col">
-          <div className="flex-1 overflow-auto py-1">
-            <TreeRow
-              node={project.tree}
-              depth={0}
-              expanded={expanded}
-              toggle={toggle}
-              query={searchQuery}
-            />
+          <div className="flex-1 overflow-auto px-2 py-2">
+            {searchQuery && !hasVisibleNodes ? (
+              <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-center text-sm text-slate-500">
+                <SearchX size={18} className="text-slate-600" />
+                <span>No files matched your search.</span>
+              </div>
+            ) : (
+              <TreeRow node={project.tree} depth={0} expanded={expanded} toggle={toggle} query={deferredQuery} />
+            )}
           </div>
           {statLine && (
-            <div className="shrink-0 border-t border-white/5 px-3 py-1.5 text-[10.5px] text-slate-500">
+            <div className="shrink-0 border-t border-white/5 bg-surface-950/30 px-3 py-2 text-[10.5px] text-slate-500">
               {statLine}
             </div>
           )}

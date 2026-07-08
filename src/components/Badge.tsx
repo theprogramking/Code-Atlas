@@ -16,7 +16,7 @@ export function Badge({ tone = 'default', children }: PropsWithChildren<{ tone?:
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none tracking-wide',
         toneClasses[tone],
       )}
     >

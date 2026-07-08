@@ -1,13 +1,23 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Panel as ResizablePanel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, Loader2, X } from 'lucide-react';
 import { Toolbar } from './components/Toolbar';
 import { LoadingOverlay } from './components/LoadingOverlay';
 import { ExplorerPanel } from './features/explorer/ExplorerPanel';
-import { GraphPanel } from './features/graph/GraphPanel';
-import { EditorPanel } from './features/editor/EditorPanel';
-import { MetadataPanel } from './features/metadata/MetadataPanel';
 import { useAppStore } from './store/useAppStore';
+
+const GraphPanel = lazy(() => import('./features/graph/GraphPanel').then((m) => ({ default: m.GraphPanel })));
+const EditorPanel = lazy(() => import('./features/editor/EditorPanel').then((m) => ({ default: m.EditorPanel })));
+const MetadataPanel = lazy(() => import('./features/metadata/MetadataPanel').then((m) => ({ default: m.MetadataPanel })));
+
+function PanelFallback({ label }: { label: string }) {
+  return (
+    <div className="flex h-full items-center justify-center gap-2 border border-white/5 bg-surface-900/80 text-sm text-slate-500">
+      <Loader2 size={14} className="animate-spin" />
+      <span>Loading {label}…</span>
+    </div>
+  );
+}
 
 function HorizontalHandle() {
   return (
@@ -44,10 +54,18 @@ function ErrorBanner() {
 
 export default function App() {
   const initialize = useAppStore((s) => s.initialize);
+  const preferences = useAppStore((s) => s.preferences);
+  const setPanelSizes = useAppStore((s) => s.setPanelSizes);
 
   useEffect(() => {
     void initialize();
   }, [initialize]);
+
+  const explorerSize = preferences.panelSizes.explorer ?? 18;
+  const metadataSize = preferences.panelSizes.metadata ?? 24;
+  const middleSize = 100 - explorerSize - metadataSize;
+  const graphSize = preferences.panelSizes.graph ?? 65;
+  const editorSize = 100 - graphSize;
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-surface-950 text-slate-100">
@@ -55,25 +73,31 @@ export default function App() {
       <ErrorBanner />
       <div className="relative min-h-0 flex-1">
         <LoadingOverlay />
-        <PanelGroup direction="horizontal" autoSaveId="codeatlas-h-layout">
-          <ResizablePanel defaultSize={18} minSize={12} maxSize={35} order={1}>
+        <PanelGroup direction="horizontal" autoSaveId="codeatlas-h-layout" onLayout={(sizes) => setPanelSizes({ explorer: sizes[0], metadata: sizes[2] })}>
+          <ResizablePanel defaultSize={explorerSize} minSize={12} maxSize={35} order={1}>
             <ExplorerPanel />
           </ResizablePanel>
           <HorizontalHandle />
-          <ResizablePanel defaultSize={58} minSize={30} order={2}>
-            <PanelGroup direction="vertical" autoSaveId="codeatlas-v-layout">
-              <ResizablePanel defaultSize={65} minSize={25} order={1}>
-                <GraphPanel />
+          <ResizablePanel defaultSize={middleSize} minSize={30} order={2}>
+            <PanelGroup direction="vertical" autoSaveId="codeatlas-v-layout" onLayout={(sizes) => setPanelSizes({ graph: sizes[0], editor: sizes[1] })}>
+              <ResizablePanel defaultSize={graphSize} minSize={25} order={1}>
+                <Suspense fallback={<PanelFallback label="graph" />}>
+                  <GraphPanel />
+                </Suspense>
               </ResizablePanel>
               <VerticalHandle />
-              <ResizablePanel defaultSize={35} minSize={15} order={2}>
-                <EditorPanel />
+              <ResizablePanel defaultSize={editorSize} minSize={15} order={2}>
+                <Suspense fallback={<PanelFallback label="editor" />}>
+                  <EditorPanel />
+                </Suspense>
               </ResizablePanel>
             </PanelGroup>
           </ResizablePanel>
           <HorizontalHandle />
-          <ResizablePanel defaultSize={24} minSize={16} maxSize={40} order={3}>
-            <MetadataPanel />
+          <ResizablePanel defaultSize={metadataSize} minSize={16} maxSize={40} order={3}>
+            <Suspense fallback={<PanelFallback label="metadata" />}>
+              <MetadataPanel />
+            </Suspense>
           </ResizablePanel>
         </PanelGroup>
       </div>

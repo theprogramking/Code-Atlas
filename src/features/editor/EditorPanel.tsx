@@ -120,13 +120,15 @@ export function EditorPanel() {
       bodyClassName="overflow-hidden"
     >
       {!parsedFile ? (
-        <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-          <FileCode2 size={22} className="text-slate-600" />
-          <p className="text-xs text-slate-500">Select a file or node to view its source.</p>
+        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+            <FileCode2 size={22} className="text-slate-600" />
+          </div>
+          <p className="text-sm text-slate-400">Select a file or architecture node to inspect its source.</p>
         </div>
       ) : (
         <Suspense
-          fallback={<div className="flex h-full items-center justify-center text-xs text-slate-500">Loading editor...</div>}
+          fallback={<div className="flex h-full items-center justify-center text-sm text-slate-500">Loading editor…</div>}
         >
           <MonacoEditor
             key={parsedFile.path}

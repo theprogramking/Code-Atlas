@@ -55,6 +55,17 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/reactflow')) return 'vendor-reactflow';
+          if (id.includes('node_modules/monaco-editor') || id.includes('@monaco-editor/react')) return 'vendor-monaco';
+          if (id.includes('node_modules')) return 'vendor';
+        },
+      },
+    },
+  },
   optimizeDeps: {
     include: ['monaco-editor'],
     esbuildOptions: {

@@ -2,7 +2,13 @@ import { create } from 'zustand';
 import type { OpenProject, ProjectStats } from '../types/fileSystem';
 import type { ParsedFile } from '../types/parser';
 import type { ArchitectureGraph } from '../types/graph';
-import { DEFAULT_GRAPH_FILTER, DEFAULT_PREFERENCES, type GraphFilterState, type UserPreferences } from '../types/app';
+import {
+  DEFAULT_GRAPH_FILTER,
+  DEFAULT_PREFERENCES,
+  type GraphFilterState,
+  type PanelId,
+  type UserPreferences,
+} from '../types/app';
 import {
   ensureReadPermission,
   flattenSourceFiles,
@@ -51,6 +57,7 @@ interface AppState {
   selectFileByPath: (path: string) => void;
   setSearchQuery: (query: string) => void;
   setGraphFilter: (filter: Partial<GraphFilterState>) => void;
+  setPanelSizes: (sizes: Partial<Record<PanelId, number>>) => void;
   updateNodePosition: (nodeId: string, position: { x: number; y: number }) => void;
   relayout: () => void;
 }
@@ -138,6 +145,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     const prefs = { ...get().preferences, lastGraphFilter: merged };
     set({ preferences: prefs });
     void putPreferences(prefs);
+  },
+
+  setPanelSizes: (sizes) => {
+    const nextPreferences = {
+      ...get().preferences,
+      panelSizes: { ...get().preferences.panelSizes, ...sizes },
+    };
+    set({ preferences: nextPreferences });
+    void putPreferences(nextPreferences);
   },
 
   updateNodePosition: (nodeId, position) => {

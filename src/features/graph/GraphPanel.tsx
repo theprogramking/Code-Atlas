@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, memo } from 'react';
 import ReactFlow, {
   Background,
   BackgroundVariant,
@@ -30,7 +30,7 @@ function nodeMatchesSearch(label: string, filePath: string, query: string): bool
   return label.toLowerCase().includes(q) || filePath.toLowerCase().includes(q);
 }
 
-function GraphInner() {
+const GraphInner = memo(function GraphInner() {
   const graph = useAppStore((s) => s.graph);
   const layoutPositions = useAppStore((s) => s.layoutPositions);
   const selectedNodeId = useAppStore((s) => s.selectedNodeId);
@@ -167,14 +167,16 @@ function GraphInner() {
       bodyClassName="relative overflow-hidden"
     >
       {!graph ? (
-        <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-          <LayoutGrid size={22} className="text-slate-600" />
-          <p className="text-xs text-slate-500">The graph will appear once a project is parsed.</p>
+        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+            <LayoutGrid size={22} className="text-slate-600" />
+          </div>
+          <p className="text-sm text-slate-400">The architecture graph will appear here once a project is parsed.</p>
         </div>
       ) : (
         <>
           {showFilters && (
-            <div className="absolute right-2 top-2 z-40 w-52 rounded-lg border border-white/10 bg-surface-800 p-2.5 shadow-panel">
+            <div className="absolute right-2 top-2 z-40 w-56 rounded-2xl border border-white/10 bg-surface-800/95 p-2.5 shadow-panel backdrop-blur">
               <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Node kinds</p>
               <div className="mb-2 flex flex-wrap gap-1">
                 {kindToggles.map((k) => (
@@ -216,6 +218,7 @@ function GraphInner() {
             minZoom={0.1}
             maxZoom={2}
             proOptions={{ hideAttribution: true }}
+            deleteKeyCode={null}
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#28304a" />
             <Controls className="!bg-surface-800 !text-slate-300 [&>button]:!border-white/10 [&>button]:!bg-surface-800 [&>button]:hover:!bg-surface-700" />
@@ -240,7 +243,7 @@ function GraphInner() {
       )}
     </Panel>
   );
-}
+});
 
 export function GraphPanel() {
   return (
