@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { isFileSystemAccessSupported } from '../services/fileSystemService';
 import { IconButton } from './IconButton';
+import { Button } from './Button';
+import { StatPill } from './StatPill';
 
 export function Toolbar() {
   const project = useAppStore((s) => s.project);
@@ -35,110 +37,91 @@ export function Toolbar() {
     if (!stats) return null;
     return [
       { label: 'Files', value: stats.fileCount },
-      { label: 'Folders', value: stats.folderCount },
       { label: 'Components', value: stats.componentCount },
       { label: 'Functions', value: stats.functionCount },
+      { label: 'Lines', value: stats.totalLines.toLocaleString() },
     ];
   }, [stats]);
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/5 bg-surface-950/80 px-3 backdrop-blur">
-      <div className="flex items-center gap-2 pr-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-500/10 ring-1 ring-accent-500/20">
-          <MapIcon size={15} className="text-accent-300" />
+    <div className="flex h-20 shrink-0 items-center gap-4 border-b border-white/10 bg-surface-950/90 px-4 py-3 backdrop-blur-xl">
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-accent-blue/10 ring-1 ring-accent-blue/20">
+          <MapIcon size={18} className="text-accent-blue" />
         </div>
-        <div className="flex flex-col leading-none">
-          <span className="text-sm font-semibold tracking-tight text-slate-100">CloudAtlas</span>
-          <span className="mt-1 text-[10px] uppercase tracking-[0.24em] text-slate-500">Architecture explorer</span>
+        <div className="flex flex-col leading-tight">
+          <span className="text-base font-semibold tracking-tight text-slate-100">CodeAtlas</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-slate-500">Developer platform</span>
         </div>
       </div>
 
-      <div className="relative flex items-center gap-2">
-        <button
-          onClick={() => void openProjectPicker()}
-          disabled={!supported}
-          className="inline-flex items-center gap-2 rounded-full border border-accent-500/25 bg-accent-600/90 px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(67,97,238,0.22)] transition hover:bg-accent-500 disabled:cursor-not-allowed disabled:opacity-40"
-          title={supported ? 'Open a local project folder' : 'Unsupported in this browser'}
-        >
-          <FolderOpen size={14} />
+      <div className="flex items-center gap-3">
+        <Button variant="primary" icon={<FolderOpen size={16} />} onClick={() => void openProjectPicker()}>
           Open Project
-        </button>
-        <button
-          onClick={() => openGithubImportModal()}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/5"
-        >
-          <Github size={14} />
+        </Button>
+        <Button variant="soft" icon={<Github size={16} />} onClick={openGithubImportModal}>
           Import from GitHub
-        </button>
-        {recentProjects.length > 0 && (
-          <div className="relative">
-            <IconButton
-              icon={<History size={14} />}
-              label="Recent projects"
-              variant="soft"
-              onClick={() => setShowRecents((v) => !v)}
-            />
-            {showRecents && (
-              <div className="absolute left-0 top-full z-40 mt-2 w-64 rounded-xl border border-white/10 bg-surface-800/95 p-1 shadow-panel">
-                {recentProjects.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => {
-                      setShowRecents(false);
-                      void reopenRecentProject(r);
-                    }}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-slate-300 transition hover:bg-white/5"
-                  >
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate">{r.name}</span>
-                      {r.source?.kind === 'github' ? (
-                        <span className="mt-0.5 truncate text-[10px] text-slate-500">{r.source.owner}/{r.source.repo}</span>
-                      ) : null}
-                    </span>
-                    <span className="shrink-0 text-[10px] text-slate-500">
-                      {new Date(r.lastOpened).toLocaleDateString()}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        </Button>
       </div>
 
-      <div className="relative ml-1 flex-1 max-w-md">
-        <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+      <div className="relative flex-1 max-w-2xl">
+        <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
         <input
           ref={searchInputRef}
-          aria-label="Search files, functions, and components"
+          aria-label="Global search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search files, functions, components..."
-          className="w-full rounded-full border border-white/10 bg-surface-800/80 py-2 pl-9 pr-3 text-sm text-slate-200 outline-none transition placeholder:text-slate-500 focus:border-accent-500/50 focus:ring-2 focus:ring-accent-500/20"
+          placeholder="Search files, components, functions, types..."
+          className="w-full rounded-3xl border border-white/10 bg-surface-800/90 py-3 pl-12 pr-4 text-sm text-slate-100 outline-none transition focus:border-accent-blue/50 focus:ring-2 focus:ring-accent-blue/20"
         />
       </div>
 
-      {!supported && (
-        <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-300">
-          Chromium browser required for local file access
-        </span>
-      )}
+      <div className="hidden shrink-0 items-center gap-2 rounded-full border border-white/10 bg-surface-900/80 px-3 py-2 lg:flex">
+        {statSummary?.map((item) => (
+          <StatPill key={item.label} label={item.label} value={item.value} />
+        ))}
+      </div>
 
-      {statSummary && (
-        <div className="ml-auto flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-          {statSummary.map((item) => (
-            <div key={item.label} className="rounded-full border border-white/5 bg-white/[0.03] px-2.5 py-1">
-              <span className="text-slate-300">{item.value}</span>
-              <span className="ml-1 text-slate-500">{item.label}</span>
+      {recentProjects.length > 0 && (
+        <div className="relative">
+          <IconButton
+            icon={<History size={16} />}
+            label="Recent projects"
+            variant="soft"
+            onClick={() => setShowRecents((v) => !v)}
+          />
+          {showRecents && (
+            <div className="absolute right-0 top-full z-40 mt-2 w-72 rounded-3xl border border-white/10 bg-surface-900/95 p-2 shadow-panel backdrop-blur">
+              {recentProjects.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => {
+                    setShowRecents(false);
+                    void reopenRecentProject(r);
+                  }}
+                  className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/5"
+                >
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-medium">{r.name}</span>
+                    {r.source?.kind === 'github' ? (
+                      <span className="mt-0.5 truncate text-xs text-slate-500">{r.source.owner}/{r.source.repo}</span>
+                    ) : null}
+                  </span>
+                  <span className="shrink-0 text-xs text-slate-500">
+                    {new Date(r.lastOpened).toLocaleDateString()}
+                  </span>
+                </button>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      <div className="hidden items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] px-2 py-1 sm:flex">
-        <Sparkles size={13} className="text-accent-300" />
-        <span className="text-[11px] text-slate-400">Fast, focused, local-first</span>
-      </div>
+      {!supported && (
+        <span className="rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">
+          Chromium required for local access
+        </span>
+      )}
     </div>
   );
 }

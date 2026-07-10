@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Info, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Info, ArrowRight, ArrowLeft, AlertTriangle, Layers, Sparkles } from 'lucide-react';
 import { Panel } from '../../components/Panel';
 import { Badge } from '../../components/Badge';
 import { useAppStore } from '../../store/useAppStore';
@@ -16,17 +16,20 @@ function EdgeList({
 }) {
   if (nodes.length === 0) return null;
   return (
-    <div>
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{title}</p>
-      <div className="flex flex-col gap-1">
+    <div className="rounded-3xl border border-white/10 bg-surface-900/80 p-3 shadow-soft">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <Layers size={14} />
+        <span>{title}</span>
+      </div>
+      <div className="flex flex-col gap-2">
         {nodes.map(({ node, label }) => (
           <button
             key={node.id}
             onClick={() => onSelect(node.id)}
-            className="flex items-center justify-between rounded border border-white/5 bg-white/[0.02] px-2 py-1 text-left text-[11px] text-slate-300 hover:bg-white/5"
+            className="flex items-center justify-between rounded-2xl border border-white/10 bg-surface-950/80 px-3 py-2 text-left text-sm text-slate-200 transition hover:border-white/20 hover:bg-white/5"
           >
             <span className="truncate">{node.label}</span>
-            {label && <span className="ml-2 shrink-0 truncate text-[9px] text-slate-500">{label}</span>}
+            {label ? <span className="text-xs text-slate-500">{label}</span> : null}
           </button>
         ))}
       </div>
@@ -76,11 +79,14 @@ export function MetadataPanel() {
   if (!node) {
     return (
       <Panel title="Metadata">
-        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
-            <Info size={22} className="text-slate-600" />
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03]">
+            <Info size={26} className="text-slate-500" />
           </div>
-          <p className="text-sm text-slate-400">Select a graph node or explorer entry to inspect its metadata.</p>
+          <div>
+            <p className="text-sm font-semibold text-slate-100">Select a node to inspect</p>
+            <p className="mt-2 text-sm text-slate-400">Hover or click a graph node or explorer item to view metadata and relationships.</p>
+          </div>
         </div>
       </Panel>
     );
@@ -88,110 +94,65 @@ export function MetadataPanel() {
 
   return (
     <Panel title="Metadata">
-      <div className="flex flex-col gap-4 p-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-slate-100">{node.label}</h3>
-            <Badge tone="blue">{node.kind}</Badge>
-            {node.isExported && <Badge tone="green">exported</Badge>}
-          </div>
-          <p className="mt-1 truncate text-[11px] text-slate-500">{node.filePath}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {node.meta.kind === 'file' && (
-            <>
-              <Stat label="Extension" value={node.meta.extension ?? 'n/a'} />
-              <Stat label="Lines" value={node.meta.lineCount.toLocaleString()} />
-              <Stat label="Size" value={`${(node.meta.size / 1024).toFixed(1)} KB`} />
-              <Stat label="Symbols" value={String(node.meta.symbolCount)} />
-            </>
-          )}
-          {node.meta.kind === 'function' && (
-            <>
-              <Stat label="Async" value={node.meta.isAsync ? 'yes' : 'no'} />
-              <Stat label="Generator" value={node.meta.isGenerator ? 'yes' : 'no'} />
-              <Stat label="Arrow fn" value={node.meta.isArrow ? 'yes' : 'no'} />
-              <Stat label="Params" value={node.meta.params.length ? node.meta.params.join(', ') : 'none'} />
-            </>
-          )}
-          {node.meta.kind === 'class' && (
-            <>
-              <Stat label="Superclass" value={node.meta.superClass ?? 'none'} />
-              <Stat label="Methods" value={String(node.meta.methods.length)} />
-            </>
-          )}
-          {node.meta.kind === 'component' && (
-            <>
-              <Stat label="Kind" value={node.meta.componentKind} />
-              <Stat label="Hooks used" value={node.meta.hooksUsed.length ? node.meta.hooksUsed.join(', ') : 'none'} />
-            </>
-          )}
-        </div>
-
-        {node.meta.kind === 'class' && node.meta.methods.length > 0 && (
-          <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Methods</p>
-            <div className="flex flex-wrap gap-1">
-              {node.meta.methods.map((m) => (
-                <Badge key={m}>{m}</Badge>
-              ))}
+      <div className="flex h-full flex-col gap-4">
+        <div className="rounded-3xl border border-white/10 bg-surface-900/80 p-4 shadow-soft">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-white/5 text-accent-blue">
+              <Sparkles size={20} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-100">{node.label}</p>
+              <p className="mt-1 text-xs text-slate-500 truncate">{node.filePath}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge tone="blue">{node.kind}</Badge>
+                {node.isExported && <Badge tone="green">exported</Badge>}
+              </div>
             </div>
           </div>
-        )}
+        </div>
 
-        <EdgeList title="Incoming (imported by / called by)" nodes={incoming} onSelect={handleSelect} />
-        <EdgeList title="Outgoing (imports / calls)" nodes={outgoing} onSelect={handleSelect} />
+        <div className="grid gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Stat label="Type" value={node.meta.kind} />
+            <Stat label="Exported" value={node.isExported ? 'Yes' : 'No'} />
+            {node.meta.kind === 'file' && <Stat label="Lines" value={node.meta.lineCount.toLocaleString()} />}
+            {node.meta.kind === 'file' && <Stat label="Size" value={`${(node.meta.size / 1024).toFixed(1)} KB`} />}
+          </div>
 
-        {node.meta.kind === 'file' && parsedFile && (
-          <>
-            {parsedFile.imports.length > 0 && (
-              <div>
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Imports ({parsedFile.imports.length})
-                </p>
-                <div className="flex flex-col gap-0.5">
-                  {parsedFile.imports.slice(0, 12).map((imp) => (
-                    <div key={imp.id} className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                      <ArrowLeft size={10} className="shrink-0 text-slate-600" />
-                      <span className="truncate">{imp.localName || '(side-effect)'}</span>
-                      <span className="shrink-0 truncate text-slate-600">from {imp.source}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {parsedFile.exports.length > 0 && (
-              <div>
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Exports ({parsedFile.exports.length})
-                </p>
-                <div className="flex flex-col gap-0.5">
-                  {parsedFile.exports.slice(0, 12).map((exp) => (
-                    <div key={exp.id} className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                      <ArrowRight size={10} className="shrink-0 text-slate-600" />
-                      <span className="truncate">{exp.exportedName}</span>
-                      <span className="shrink-0 text-slate-600">({exp.kind})</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {parsedFile.errors.length > 0 && (
-              <div className="rounded border border-amber-500/20 bg-amber-500/5 p-2">
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-400">
-                  <AlertTriangle size={11} />
-                  Parse warnings
-                </div>
-                {parsedFile.errors.map((e, i) => (
-                  <p key={i} className="mt-1 text-[10.5px] text-amber-400/70">
-                    {e.message}
-                  </p>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+          {node.meta.kind === 'function' && (
+            <CardSection title="Function details">
+              <Detail label="Async" value={node.meta.isAsync ? 'Yes' : 'No'} />
+              <Detail label="Generator" value={node.meta.isGenerator ? 'Yes' : 'No'} />
+              <Detail label="Arrow" value={node.meta.isArrow ? 'Yes' : 'No'} />
+              <Detail label="Parameters" value={node.meta.params.length ? node.meta.params.join(', ') : 'None'} />
+            </CardSection>
+          )}
+
+          {node.meta.kind === 'class' && (
+            <CardSection title="Class details">
+              <Detail label="Superclass" value={node.meta.superClass ?? 'None'} />
+              <Detail label="Methods" value={String(node.meta.methods.length)} />
+            </CardSection>
+          )}
+
+          {node.meta.kind === 'component' && (
+            <CardSection title="Component details">
+              <Detail label="Component kind" value={node.meta.componentKind} />
+              <Detail label="Hooks used" value={node.meta.hooksUsed.length ? node.meta.hooksUsed.join(', ') : 'None'} />
+            </CardSection>
+          )}
+
+          <EdgeList title="Incoming dependencies" nodes={incoming} onSelect={handleSelect} />
+          <EdgeList title="Outgoing dependencies" nodes={outgoing} onSelect={handleSelect} />
+
+          {node.meta.kind === 'file' && parsedFile && (
+            <CardSection title="File insights">
+              <p className="text-sm leading-6 text-slate-400">
+                This file includes {parsedFile.imports.length} imports and {parsedFile.exports.length} exports. More AI insights will appear here soon.
+              </p>
+            </CardSection>
+          )}
+        </div>
       </div>
     </Panel>
   );
@@ -199,9 +160,27 @@ export function MetadataPanel() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-white/5 bg-white/[0.02] px-2 py-1.5">
-      <p className="text-[9.5px] uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="truncate text-[11.5px] text-slate-200">{value}</p>
+    <div className="rounded-3xl border border-white/10 bg-surface-900/80 px-4 py-3 text-sm text-slate-200 shadow-soft">
+      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <p className="mt-2 text-base font-semibold text-slate-100">{value}</p>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-2xl bg-surface-950/90 px-3 py-2 text-sm text-slate-200">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-semibold text-slate-100">{value}</span>
+    </div>
+  );
+}
+
+function CardSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-surface-900/80 p-4 shadow-soft">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{title}</p>
+      <div className="flex flex-col gap-2">{children}</div>
     </div>
   );
 }

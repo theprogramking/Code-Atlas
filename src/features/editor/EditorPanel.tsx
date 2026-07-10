@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import type { editor } from 'monaco-editor';
-import { FileCode2, ListTree } from 'lucide-react';
+import { FileCode2, ListTree, ChevronRight } from 'lucide-react';
 import { Panel } from '../../components/Panel';
 import { useAppStore } from '../../store/useAppStore';
 import { getExtension } from '../../utils/path';
+import { Button } from '../../components/Button';
 
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
 
@@ -50,8 +51,6 @@ export function EditorPanel() {
     [graph, selectedNodeId],
   );
 
-  // Highlight the selected node's line range (function/class/component) whenever
-  // the selection or the underlying file content changes.
   useEffect(() => {
     const ed = editorRef.current;
     if (!ed) return;
@@ -88,28 +87,29 @@ export function EditorPanel() {
 
   return (
     <Panel
-      title={parsedFile ? parsedFile.path : 'Code Viewer'}
-      icon={<FileCode2 size={12} className="text-slate-500" />}
+      title={parsedFile ? parsedFile.path.split('/').pop() ?? parsedFile.path : 'Code Viewer'}
+      icon={<FileCode2 size={14} className="text-slate-500" />}
       actions={
         parsedFile && symbols.length > 0 ? (
           <div className="relative">
             <button
               onClick={() => setShowSymbols((v) => !v)}
-              className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] text-slate-400 hover:bg-white/5 hover:text-slate-200"
+              className="flex items-center gap-1 rounded-full border border-white/10 bg-surface-800/80 px-3 py-1 text-[11px] text-slate-300 transition hover:bg-white/10 hover:text-slate-100"
               title="Jump to symbol"
             >
-              <ListTree size={12} />
+              <ListTree size={14} />
+              Symbols
             </button>
             {showSymbols && (
-              <div className="absolute right-0 top-full z-40 mt-1 max-h-64 w-56 overflow-auto rounded-lg border border-white/10 bg-surface-800 py-1 shadow-panel">
+              <div className="absolute right-0 top-full z-40 mt-2 max-h-64 w-72 overflow-auto rounded-3xl border border-white/10 bg-surface-900/95 p-2 shadow-panel">
                 {symbols.map((s) => (
                   <button
                     key={`${s.name}-${s.loc.startLine}`}
                     onClick={() => jumpToSymbol(s.loc.startLine)}
-                    className="flex w-full items-center justify-between px-3 py-1 text-left text-[11px] text-slate-300 hover:bg-white/5"
+                    className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-sm text-slate-200 transition hover:bg-white/5"
                   >
                     <span className="truncate">{s.name}</span>
-                    <span className="shrink-0 text-[9px] text-slate-500">L{s.loc.startLine}</span>
+                    <span className="shrink-0 text-xs text-slate-500">L{s.loc.startLine}</span>
                   </button>
                 ))}
               </div>
@@ -120,40 +120,67 @@ export function EditorPanel() {
       bodyClassName="overflow-hidden"
     >
       {!parsedFile ? (
-        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
-            <FileCode2 size={22} className="text-slate-600" />
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03]">
+            <FileCode2 size={24} className="text-slate-500" />
           </div>
-          <p className="text-sm text-slate-400">Select a file or architecture node to inspect its source.</p>
+          <div>
+            <p className="text-sm font-semibold text-slate-100">Ready when you are</p>
+            <p className="mt-2 text-sm text-slate-400">Select a file or node to inspect its source code with syntax highlighting and inline symbol navigation.</p>
+          </div>
         </div>
       ) : (
-        <Suspense
-          fallback={<div className="flex h-full items-center justify-center text-sm text-slate-500">Loading editor…</div>}
-        >
-          <MonacoEditor
-            key={parsedFile.path}
-            height="100%"
-            theme="vs-dark"
-            language={language}
-            value={parsedFile.source}
-            onMount={(ed) => {
-              editorRef.current = ed;
-            }}
-            options={{
-              readOnly: true,
-              domReadOnly: true,
-              minimap: { enabled: true, scale: 1 },
-              fontSize: 12.5,
-              fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-              lineNumbers: 'on',
-              folding: true,
-              scrollBeyondLastLine: false,
-              renderLineHighlight: 'line',
-              automaticLayout: true,
-              padding: { top: 8 },
-            }}
-          />
-        </Suspense>
+        <div className="flex h-full flex-col overflow-hidden rounded-[24px] border border-white/10 bg-surface-900/80 shadow-soft">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-slate-100">
+              <span className="font-semibold">{parsedFile.path.split('/').pop()}</span>
+              <span className="text-xs text-slate-500">{parsedFile.path}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              {parsedFile.functions.length + parsedFile.classes.length > 0 ? (
+                <span>{parsedFile.functions.length + parsedFile.classes.length} symbols</span>
+              ) : null}
+              <span>{parsedFile.lineCount} lines</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 border-b border-white/10 bg-surface-950/70 px-4 py-2 text-xs text-slate-400">
+            {parsedFile.path.split('/').map((segment, index, arr) => (
+              <span key={`${segment}-${index}`} className="flex items-center gap-2">
+                {index > 0 && <ChevronRight size={14} className="text-slate-600" />}
+                <span className="truncate">{segment}</span>
+              </span>
+            ))}
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <Suspense
+              fallback={<div className="flex h-full items-center justify-center text-sm text-slate-500">Loading editor…</div>}
+            >
+              <MonacoEditor
+                key={parsedFile.path}
+                height="100%"
+                theme="vs-dark"
+                language={language}
+                value={parsedFile.source}
+                onMount={(ed) => {
+                  editorRef.current = ed;
+                }}
+                options={{
+                  readOnly: true,
+                  domReadOnly: true,
+                  minimap: { enabled: true, scale: 1 },
+                  fontSize: 13,
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  lineNumbers: 'on',
+                  folding: true,
+                  scrollBeyondLastLine: false,
+                  renderLineHighlight: 'line',
+                  automaticLayout: true,
+                  padding: { top: 12, bottom: 12 },
+                }}
+              />
+            </Suspense>
+          </div>
+        </div>
       )}
     </Panel>
   );

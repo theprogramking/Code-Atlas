@@ -9,7 +9,6 @@ interface PanelProps {
   bodyClassName?: string;
 }
 
-/** Consistent chrome (header + scroll body) shared by every dock panel. */
 export function Panel({
   title,
   icon,
@@ -19,15 +18,15 @@ export function Panel({
   children,
 }: PropsWithChildren<PanelProps>) {
   return (
-    <div className={clsx('flex h-full min-h-0 flex-col overflow-hidden rounded-none border border-white/5 bg-surface-900/80 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur', className)}>
-      <div className="flex h-11 shrink-0 items-center justify-between border-b border-white/5 bg-surface-950/40 px-3">
-        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+    <div className={clsx('flex h-full min-h-0 flex-col overflow-hidden rounded-[20px] border border-white/10 bg-surface-900/95 shadow-panel backdrop-blur-md', className)}>
+      <div className="flex h-14 items-center justify-between gap-3 border-b border-white/10 bg-surface-950/80 px-4 py-3">
+        <div className="flex items-center gap-3 text-sm font-semibold tracking-tight text-slate-100">
           {icon}
           <span>{title}</span>
         </div>
-        {actions ? <div className="flex items-center gap-1.5">{actions}</div> : null}
+        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
-      <div className={clsx('min-h-0 flex-1 overflow-auto', bodyClassName)}>{children}</div>
+      <div className={clsx('min-h-0 flex-1 overflow-auto px-4 py-4', bodyClassName)}>{children}</div>
     </div>
   );
 }

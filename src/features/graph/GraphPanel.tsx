@@ -18,10 +18,10 @@ import { nodeTypes, type AtlasNodeData } from './AtlasNode';
 import type { GraphEdgeKind, GraphNodeKind } from '../../types/graph';
 
 const EDGE_COLORS: Record<GraphEdgeKind, string> = {
-  import: '#5b7cfa',
-  export: '#34d399',
-  call: '#f59e0b',
-  owns: '#475569',
+  import: '#2F81F7',
+  export: '#3FB950',
+  call: '#D29922',
+  owns: '#8B94A1',
 };
 
 function nodeMatchesSearch(label: string, filePath: string, query: string): boolean {
@@ -68,7 +68,7 @@ const GraphInner = memo(function GraphInner() {
       .filter((n) => visibleNodeIds.has(n.id))
       .map((n) => {
         const pos = layoutPositions[n.id] ?? { x: 0, y: 0 };
-        const widthByKind: Record<GraphNodeKind, number> = { file: 200, component: 180, class: 170, function: 160 };
+        const widthByKind: Record<GraphNodeKind, number> = { file: 220, component: 220, class: 200, function: 190 };
         return {
           id: n.id,
           type: 'atlasNode',
@@ -102,10 +102,11 @@ const GraphInner = memo(function GraphInner() {
           source: e.source,
           target: e.target,
           label: e.kind === 'import' ? e.label : undefined,
+          type: 'smoothstep',
           style: {
             stroke: EDGE_COLORS[e.kind],
-            strokeWidth: isConnectedToSelection ? 2 : 1,
-            opacity: selectedNodeId ? (isConnectedToSelection ? 1 : 0.12) : 0.55,
+            strokeWidth: isConnectedToSelection ? 2.2 : 1.2,
+            opacity: selectedNodeId ? (isConnectedToSelection ? 1 : 0.14) : 0.6,
           },
           animated: e.kind === 'call' && isConnectedToSelection,
         } satisfies Edge;
@@ -150,35 +151,37 @@ const GraphInner = memo(function GraphInner() {
         <>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] text-slate-400 hover:bg-white/5 hover:text-slate-200"
+            className="flex items-center gap-1 rounded-full px-2 py-1 text-[10px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200"
             title="Filter node/edge kinds"
           >
-            <Filter size={12} />
+            <Filter size={14} />
+            <span className="hidden sm:inline">Filters</span>
           </button>
           <button
             onClick={relayout}
-            className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] text-slate-400 hover:bg-white/5 hover:text-slate-200"
+            className="flex items-center gap-1 rounded-full px-2 py-1 text-[10px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200"
             title="Auto layout"
           >
-            <LayoutGrid size={12} />
+            <LayoutGrid size={14} />
+            <span className="hidden sm:inline">Layout</span>
           </button>
         </>
       }
       bodyClassName="relative overflow-hidden"
     >
       {!graph ? (
-        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
-            <LayoutGrid size={22} className="text-slate-600" />
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.03]">
+            <LayoutGrid size={26} className="text-slate-600" />
           </div>
           <p className="text-sm text-slate-400">The architecture graph will appear here once a project is parsed.</p>
         </div>
       ) : (
         <>
           {showFilters && (
-            <div className="absolute right-2 top-2 z-40 w-56 rounded-2xl border border-white/10 bg-surface-800/95 p-2.5 shadow-panel backdrop-blur">
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Node kinds</p>
-              <div className="mb-2 flex flex-wrap gap-1">
+            <div className="absolute right-4 top-4 z-40 w-72 rounded-3xl border border-white/10 bg-surface-900/95 p-4 shadow-panel backdrop-blur">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Node kinds</p>
+              <div className="mb-4 flex flex-wrap gap-2">
                 {kindToggles.map((k) => (
                   <button
                     key={k.key}
@@ -190,8 +193,8 @@ const GraphInner = memo(function GraphInner() {
                   </button>
                 ))}
               </div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Edge kinds</p>
-              <div className="flex flex-wrap gap-1">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Edge kinds</p>
+              <div className="flex flex-wrap gap-2">
                 {edgeToggles.map((k) => (
                   <button
                     key={k.key}
@@ -201,7 +204,7 @@ const GraphInner = memo(function GraphInner() {
                       })
                     }
                   >
-                    <Badge tone={graphFilter.edgeKinds[k.key] ? 'amber' : 'default'}>{k.label}</Badge>
+                    <Badge tone={graphFilter.edgeKinds[k.key] ? 'orange' : 'default'}>{k.label}</Badge>
                   </button>
                 ))}
               </div>
@@ -215,26 +218,23 @@ const GraphInner = memo(function GraphInner() {
             onNodeDragStop={handleNodeDragStop}
             onPaneClick={handlePaneClick}
             fitView
-            minZoom={0.1}
+            minZoom={0.12}
             maxZoom={2}
             proOptions={{ hideAttribution: true }}
             deleteKeyCode={null}
           >
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#28304a" />
-            <Controls className="!bg-surface-800 !text-slate-300 [&>button]:!border-white/10 [&>button]:!bg-surface-800 [&>button]:hover:!bg-surface-700" />
+            <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#30363D" />
+            <Controls className="!bg-surface-900/90 !text-slate-300 [&>button]:!border-white/10 [&>button]:!bg-surface-900/90 [&>button]:hover:!bg-surface-800/90" />
             <MiniMap
               pannable
               zoomable
-              className="!bg-surface-800"
-              maskColor="rgba(11,15,25,0.7)"
+              className="!rounded-[18px] !bg-surface-900/90"
+              maskColor="rgba(17,23,35,0.75)"
               nodeColor={(n) => {
                 const data = n.data as AtlasNodeData | undefined;
-                if (!data) return '#475569';
+                if (!data) return '#64748B';
                 return (
-                  { file: '#64748b', component: '#7c9cff', class: '#a78bfa', function: '#34d399' } as Record<
-                    GraphNodeKind,
-                    string
-                  >
+                  { file: '#8B94A1', component: '#2F81F7', class: '#A371F7', function: '#3FB950' } as Record<GraphNodeKind, string>
                 )[data.graphNode.kind];
               }}
             />

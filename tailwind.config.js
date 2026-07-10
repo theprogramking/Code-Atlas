@@ -6,17 +6,20 @@ export default {
     extend: {
       colors: {
         surface: {
-          950: '#0b0f19',
-          900: '#0f1420',
-          800: '#141a29',
-          700: '#1c2333',
-          600: '#28304a',
-          500: '#3a4568',
+          950: '#0D1117',
+          900: '#161B22',
+          800: '#1C2128',
+          700: '#262C36',
+          600: '#30363D',
+          500: '#42474F',
         },
         accent: {
-          400: '#7c9cff',
-          500: '#5b7cfa',
-          600: '#4361ee',
+          blue: '#2F81F7',
+          green: '#3FB950',
+          orange: '#D29922',
+          red: '#F85149',
+          purple: '#A371F7',
+          cyan: '#79C0FF',
         },
       },
       fontFamily: {
@@ -24,7 +27,8 @@ export default {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        panel: '0 0 0 1px rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.35)',
+        panel: '0 16px 32px rgba(0,0,0,0.24)',
+        soft: '0 8px 24px rgba(0,0,0,0.22)',
       },
     },
   },

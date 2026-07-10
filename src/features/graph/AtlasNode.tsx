@@ -6,31 +6,31 @@ import type { GraphNodeData } from '../../types/graph';
 
 const KIND_STYLES: Record<
   GraphNodeData['kind'],
-  { icon: typeof FileCode2; border: string; bg: string; iconColor: string }
+  { icon: typeof FileCode2; bg: string; iconColor: string; accent: string }
 > = {
   file: {
     icon: FileCode2,
-    border: 'border-slate-500/40',
-    bg: 'bg-surface-800',
-    iconColor: 'text-slate-400',
+    bg: 'bg-surface-900',
+    iconColor: 'text-slate-300',
+    accent: 'border-slate-600',
   },
   component: {
     icon: Component,
-    border: 'border-accent-500/50',
-    bg: 'bg-accent-600/10',
-    iconColor: 'text-accent-300',
+    bg: 'bg-accent-blue/10',
+    iconColor: 'text-accent-blue',
+    accent: 'border-accent-blue/30',
   },
   class: {
     icon: Box,
-    border: 'border-violet-500/40',
-    bg: 'bg-violet-500/10',
-    iconColor: 'text-violet-300',
+    bg: 'bg-accent-purple/10',
+    iconColor: 'text-accent-purple',
+    accent: 'border-accent-purple/30',
   },
   function: {
     icon: FunctionSquare,
-    border: 'border-emerald-500/40',
-    bg: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-300',
+    bg: 'bg-accent-green/10',
+    iconColor: 'text-accent-green',
+    accent: 'border-accent-green/30',
   },
 };
 
@@ -56,25 +56,31 @@ function AtlasNodeInner({ data }: NodeProps<AtlasNodeData>) {
   return (
     <div
       className={clsx(
-        'w-full rounded-lg border px-3 py-2 shadow-sm transition-all duration-150',
-        style.border,
+        'w-full rounded-[16px] border px-4 py-3 shadow-soft transition duration-150',
         style.bg,
+        style.accent,
         isDimmed && !isHighlighted && !isSelected && 'opacity-25',
-        isSelected && 'ring-2 ring-accent-400',
-        isHighlighted && !isSelected && 'ring-1 ring-accent-400/60',
-        matchesSearch && !isSelected && 'ring-1 ring-amber-400/70',
+        isSelected && 'ring-2 ring-accent-blue/60',
+        isHighlighted && !isSelected && 'ring-1 ring-accent-blue/40',
+        matchesSearch && !isSelected && 'ring-1 ring-accent-blue/40',
       )}
     >
-      <Handle type="target" position={Position.Left} className="!h-2 !w-2 !border-0 !bg-slate-600" />
-      <Handle type="source" position={Position.Right} className="!h-2 !w-2 !border-0 !bg-slate-600" />
-      <div className="flex items-center gap-1.5">
-        <Icon size={13} className={clsx('shrink-0', style.iconColor)} />
-        <span className="truncate text-[12px] font-medium text-slate-100">{graphNode.label}</span>
-        {graphNode.isExported && (
-          <span className="ml-auto shrink-0 rounded bg-white/5 px-1 text-[9px] text-slate-400">export</span>
-        )}
+      <Handle type="target" position={Position.Left} className="!h-3 !w-3 !border-0 !bg-slate-600" />
+      <Handle type="source" position={Position.Right} className="!h-3 !w-3 !border-0 !bg-slate-600" />
+      <div className="flex items-start gap-2">
+        <div className={clsx('mt-1 rounded-2xl p-2', style.bg)}>
+          <Icon size={16} className={clsx(style.iconColor)} />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+            <span className="truncate">{graphNode.label}</span>
+            {graphNode.isExported ? (
+              <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">export</span>
+            ) : null}
+          </div>
+          <div className="mt-1 text-[11px] text-slate-500">{subtitle}</div>
+        </div>
       </div>
-      {subtitle && <div className="mt-0.5 truncate text-[10px] text-slate-500">{subtitle}</div>}
     </div>
   );
 }
